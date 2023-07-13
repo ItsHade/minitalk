@@ -12,6 +12,10 @@
 
 #include "../include/minitalk.h"
 
+//seems to stop because of g_bitReceived when using usleep(100);
+
+int g_bitReceived = 1;
+
 int	ft_sendchar(int server_id, char letter)
 {
 	int		c;
@@ -19,11 +23,14 @@ int	ft_sendchar(int server_id, char letter)
 	c = 0;
 	while (c < 8)
 	{
-		if ((letter & (0x01 << c)) != 0)
+		if (g_bitReceived == 0)
+			pause();
+		if ((letter & (1 << c)))
 			kill(server_id, SIGUSR1);
 		else
 			kill(server_id, SIGUSR2);
-		usleep(100);
+		g_bitReceived = 0;
+		// usleep(100);
 		c++;
 	}
 	return (0);
@@ -31,16 +38,13 @@ int	ft_sendchar(int server_id, char letter)
 
 void	ft_handlesig(int signum)
 {
-	static int count = 0;
-
 	if(signum == SIGUSR1)
-	{
 		ft_putstr("Le message a ete recu avec succes!\n");
-		ft_putnbr(count);
-		ft_putstr(" caracteres ont etaient affiches!\n");
-	}
 	else if (signum == SIGUSR2)
-		count++;
+	{
+		g_bitReceived = 1;
+		ft_putstr("bit received!\n");
+	}
 
 }
 
@@ -67,11 +71,16 @@ int	main(int argc, char **argv)
 	}
 	while (argv[2][i])
 	{
+		ft_putnbr(i);
+		ft_putchar('\n');
 		signal(SIGUSR1, ft_handlesig);
 		signal(SIGUSR2, ft_handlesig);
 		ft_sendchar(server_id, argv[2][i]);
 		i++;
 	}
-	ft_sendchar(server_id, '\n');
+	ft_putnbr(i);
+	ft_putchar('\n');
+	ft_sendchar(server_id, '\0');
 	return(0);
 }
+// int g_clientpid = -1;

@@ -15,21 +15,22 @@
 //maybe need to malloc the full char * before printing
 //when running ./client multiple times fast the signals overlap 
 
-// int g_clientpid = -1;
-
-void	ft_handle_sigusr(int signum)
+void	ft_handle_sigusr(int signum, siginfo_t *info, void *ptr)
 {
 	static unsigned int 	c = 0;
 	static int				i = 0;
+
+	(void) ptr;
 	if (signum == SIGUSR1)
-		i |= (0x01 << c);
-	c++;
-	if (c == 8)
+		c |= (1 << i);
+	i++;
+	if (i == 8)
 	{
-		ft_putchar(i);
+		ft_putchar(c);
 		c = 0;
 		i = 0;
 	}
+	kill(info->si_pid, SIGUSR2);
 }
 
 void	ft_server(void)
@@ -39,15 +40,14 @@ void	ft_server(void)
 	ft_putchar('\n');
 }
 
-// without the sa.sa_flags = 0; --> User defined signal ..
-
 int	main(int argc, char **argv)
 {
 	struct sigaction	sa;
 
-	sa.sa_handler = ft_handle_sigusr;
-	sa.sa_flags = 0;
 	(void) argv;
+	sa.sa_sigaction = &ft_handle_sigusr;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_SIGINFO;
 	if (argc != 1)
 	{
 		ft_putstr("Arguments pas valides\n");

@@ -21,17 +21,21 @@ void	ft_handle_sigusr(int signum, siginfo_t *info, void *ptr)
 	static unsigned int 	c = 0;
 	static int				i = 0;
 	if (signum == SIGUSR1)
-		i |= (0x01 << c);
-	c++;
-	if (c == 8)
+		c |= (1 << i);
+	i++;
+	if (i == 8)
 	{
-		ft_putchar(i);
-		if (i == '\n')
+		if (c == '\0')
+		{
+			ft_putchar('\n');
 			kill(info->si_pid, SIGUSR1);
+		}
+		else
+			ft_putchar(c);
 		c = 0;
 		i = 0;
-		kill(info->si_pid, SIGUSR2);
 	}
+	kill(info->si_pid, SIGUSR2);
 }
 
 void	ft_server(void)
@@ -45,10 +49,10 @@ int	main(int argc, char **argv)
 {
 	struct sigaction	sa;
 
+	(void) argv;
 	sa.sa_sigaction = &ft_handle_sigusr;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_SIGINFO;
-	(void) argv;
 	if (argc != 1)
 	{
 		ft_putstr("Arguments pas valides\n");

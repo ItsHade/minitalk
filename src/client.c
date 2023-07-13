@@ -12,6 +12,8 @@
 
 #include "../include/minitalk.h"
 
+int g_bitReceived = 1;
+
 int	ft_sendchar(int server_id, char letter)
 {
 	int		c;
@@ -19,14 +21,30 @@ int	ft_sendchar(int server_id, char letter)
 	c = 0;
 	while (c < 8)
 	{
-		if ((letter & (0x01 << c)) != 0)
-			kill(server_id, SIGUSR1);
+		if (g_bitReceived == 1)
+		{
+			if ((letter & (1 << c)))
+				kill(server_id, SIGUSR1);
+			else
+				kill(server_id, SIGUSR2);
+			g_bitReceived = 0;
+			// usleep(100);
+			c++;
+		}
 		else
-			kill(server_id, SIGUSR2);
-		usleep(800);
-		c++;
+			ft_putstr("not ready!!!!!!\n");
 	}
 	return (0);
+}
+
+void	ft_handlesig(int signum)
+{
+	if (signum == SIGUSR2)
+	{
+		g_bitReceived = 1;
+		ft_putstr("bit received!\n");
+	}
+
 }
 
 int	main(int argc, char **argv)
@@ -50,11 +68,14 @@ int	main(int argc, char **argv)
 		ft_putstr("pid invalide\n");
 		return (-1);
 	}
+	signal(SIGUSR1, ft_handlesig);
+	signal(SIGUSR2, ft_handlesig);
 	while (argv[2][i])
 	{
 		ft_sendchar(server_id, argv[2][i]);
 		i++;
 	}
+	ft_putstr("J'ai finis!\n");
 	ft_sendchar(server_id, '\n');
 	return (0);
 }
