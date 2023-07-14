@@ -12,7 +12,7 @@
 
 #include "../include/minitalk.h"
 
-int g_bitReceived = 1;
+int g_countBitReceived = 0;
 
 int	ft_sendchar(int server_id, char letter)
 {
@@ -21,18 +21,13 @@ int	ft_sendchar(int server_id, char letter)
 	c = 0;
 	while (c < 8)
 	{
-		if (g_bitReceived == 1)
-		{
-			if ((letter & (1 << c)))
-				kill(server_id, SIGUSR1);
-			else
-				kill(server_id, SIGUSR2);
-			g_bitReceived = 0;
-			// usleep(100);
-			c++;
-		}
+		if (g_countBitReceived != c)
+			pause();
+		if ((letter & (1 << c)))
+			kill(server_id, SIGUSR1);
 		else
-			ft_putstr("not ready!!!!!!\n");
+			kill(server_id, SIGUSR2);
+		c++;
 	}
 	return (0);
 }
@@ -40,10 +35,9 @@ int	ft_sendchar(int server_id, char letter)
 void	ft_handlesig(int signum)
 {
 	if (signum == SIGUSR2)
-	{
-		g_bitReceived = 1;
-		ft_putstr("bit received!\n");
-	}
+		g_countBitReceived += 1;
+	if (g_countBitReceived > 7)
+		g_countBitReceived = 0;
 
 }
 
@@ -68,14 +62,14 @@ int	main(int argc, char **argv)
 		ft_putstr("pid invalide\n");
 		return (-1);
 	}
-	signal(SIGUSR1, ft_handlesig);
-	signal(SIGUSR2, ft_handlesig);
 	while (argv[2][i])
 	{
+		signal(SIGUSR1, ft_handlesig);
+		signal(SIGUSR2, ft_handlesig);
 		ft_sendchar(server_id, argv[2][i]);
 		i++;
 	}
+	ft_sendchar(server_id, '\n');	
 	ft_putstr("J'ai finis!\n");
-	ft_sendchar(server_id, '\n');
 	return (0);
 }

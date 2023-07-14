@@ -12,9 +12,6 @@
 
 #include "../include/minitalk.h"
 
-//maybe need to malloc the full char * before printing
-//when running ./client multiple times fast the signals overlap 
-
 void	ft_handle_sigusr(int signum, siginfo_t *info, void *ptr)
 {
 	static unsigned int 	c = 0;

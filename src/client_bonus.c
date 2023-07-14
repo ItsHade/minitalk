@@ -12,9 +12,7 @@
 
 #include "../include/minitalk.h"
 
-//seems to stop because of g_bitReceived when using usleep(100);
-
-int g_bitReceived = 1;
+int g_countBitReceived = 0;
 
 int	ft_sendchar(int server_id, char letter)
 {
@@ -23,14 +21,12 @@ int	ft_sendchar(int server_id, char letter)
 	c = 0;
 	while (c < 8)
 	{
-		if (g_bitReceived == 0)
+		if (g_countBitReceived != c)
 			pause();
 		if ((letter & (1 << c)))
 			kill(server_id, SIGUSR1);
 		else
 			kill(server_id, SIGUSR2);
-		g_bitReceived = 0;
-		// usleep(100);
 		c++;
 	}
 	return (0);
@@ -41,11 +37,9 @@ void	ft_handlesig(int signum)
 	if(signum == SIGUSR1)
 		ft_putstr("Le message a ete recu avec succes!\n");
 	else if (signum == SIGUSR2)
-	{
-		g_bitReceived = 1;
-		ft_putstr("bit received!\n");
-	}
-
+		g_countBitReceived += 1;
+	if (g_countBitReceived > 7)
+		g_countBitReceived = 0;
 }
 
 int	main(int argc, char **argv)
@@ -57,6 +51,7 @@ int	main(int argc, char **argv)
 	if (argc != 3)
 	{
 		ft_putstr("Arguments invalides\n");
+		ft_putstr("Format: ./client_bonus [pid] [message]\n");
 		return (0);
 	}
 	if (ft_atoi(argv[1], &server_id) == -1)
@@ -71,16 +66,11 @@ int	main(int argc, char **argv)
 	}
 	while (argv[2][i])
 	{
-		ft_putnbr(i);
-		ft_putchar('\n');
 		signal(SIGUSR1, ft_handlesig);
 		signal(SIGUSR2, ft_handlesig);
 		ft_sendchar(server_id, argv[2][i]);
 		i++;
 	}
-	ft_putnbr(i);
-	ft_putchar('\n');
 	ft_sendchar(server_id, '\0');
 	return(0);
 }
-// int g_clientpid = -1;

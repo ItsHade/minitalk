@@ -12,9 +12,6 @@
 
 #include "../include/minitalk.h"
 
-//maybe need to malloc the full char * before printing
-//when running ./client multiple times fast the signals overlap 
-
 void	ft_handle_sigusr(int signum, siginfo_t *info, void *ptr)
 {
 	(void) ptr;
@@ -56,6 +53,7 @@ int	main(int argc, char **argv)
 	if (argc != 1)
 	{
 		ft_putstr("Arguments pas valides\n");
+		ft_putstr("Format: ./server_bonus\n");
 		return (0);
 	}
 	ft_server();
